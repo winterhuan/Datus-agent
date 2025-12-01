@@ -244,14 +244,18 @@ class InteractiveInit:
             return False
 
         # Database type selection
-        db_types = ["sqlite", "duckdb", "snowflake", "mysql", "starrocks"]
+        db_types = ["sqlite", "duckdb", "snowflake", "mysql", "starrocks", "spark_thrift"]
         db_type = Prompt.ask("- Database type", choices=db_types, default="duckdb")
 
         # Connection configuration based on database type
-        if db_type in ["starrocks", "mysql"]:
-            # Host-based database configuration (StarRocks/MySQL)
-            host = Prompt.ask("- Host", default="127.0.0.1")
-            port = Prompt.ask("- Port", default="9030")
+        if db_type in ["starrocks", "mysql", "spark_thrift"]:
+            # Host-based database configuration (StarRocks/MySQL/Spark Thrift)
+            if db_type == "spark_thrift":
+                host = Prompt.ask("- Host", default="localhost")
+                port = Prompt.ask("- Port", default="10000")
+            else:
+                host = Prompt.ask("- Host", default="127.0.0.1")
+                port = Prompt.ask("- Port", default="9030")
             username = Prompt.ask("- Username")
             password = getpass("- Password: ")
             database = Prompt.ask("- Database")
@@ -270,6 +274,11 @@ class InteractiveInit:
             # Add StarRocks-specific catalog field
             if db_type == "starrocks":
                 config_data["catalog"] = "default_catalog"
+
+            # Add Spark Thrift-specific auth field
+            if db_type == "spark_thrift":
+                auth = Prompt.ask("- Auth mechanism", choices=["NONE", "LDAP", "CUSTOM"], default="LDAP")
+                config_data["auth"] = auth
 
             self.config["agent"]["namespace"][self.namespace_name] = config_data
         elif db_type == "snowflake":

@@ -22,6 +22,7 @@ class DBType(str, Enum):
     ORACLE = "oracle"
     HIVE = "hive"
     CLICKZETTA = "clickzetta"
+    SPARK_THRIFT = "spark_thrift"
 
     @classmethod
     def support_catalog(cls, db_type: str) -> bool:

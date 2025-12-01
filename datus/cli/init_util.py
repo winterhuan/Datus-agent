@@ -26,23 +26,30 @@ def detect_db_connectivity(namespace_name, db_config_data) -> tuple[bool, str]:
         db_type = db_config_data["type"]
 
         # Create DbConfig object with appropriate fields based on database type
-        if db_type in ["starrocks", "mysql"]:
-            # For host-based connectors (StarRocks/MySQL)
+        if db_type in ["starrocks", "mysql", "spark_thrift"]:
+            # For host-based connectors (StarRocks/MySQL/Spark Thrift)
             port = db_config_data.get("port")
             if not port:
-                default_ports = {"starrocks": 9030, "mysql": 3306}
+                default_ports = {"starrocks": 9030, "mysql": 3306, "spark_thrift": 10000}
                 port = default_ports.get(db_type, 0)
 
-            db_config = DbConfig(
-                type=db_type,
-                host=db_config_data.get("host", ""),
-                port=int(port) if port else 0,
-                username=db_config_data.get("username", ""),
-                password=db_config_data.get("password", ""),
-                database=db_config_data.get("database", ""),
-                # StarRocks specific
-                catalog=db_config_data.get("catalog", "default_catalog"),
-            )
+            # Base configuration for all host-based databases
+            config_dict = {
+                "type": db_type,
+                "host": db_config_data.get("host", ""),
+                "port": int(port) if port else 0,
+                "username": db_config_data.get("username", ""),
+                "password": db_config_data.get("password", ""),
+                "database": db_config_data.get("database", ""),
+            }
+
+            # Add database-specific fields
+            if db_type == "starrocks":
+                config_dict["catalog"] = db_config_data.get("catalog", "default_catalog")
+            elif db_type == "spark_thrift":
+                config_dict["auth"] = db_config_data.get("auth", "")
+
+            db_config = DbConfig(**config_dict)
         elif db_type == "snowflake":
             # For Snowflake connector
             db_config = DbConfig(

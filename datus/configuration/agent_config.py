@@ -38,6 +38,8 @@ class DbConfig:
     workspace: str = field(default="", init=True)
     vcluster: str = field(default="", init=True)
     secure: bool = field(default=False, init=True)
+    # Spark Thrift specific fields
+    auth: str = field(default="", init=True)  # Authentication mechanism for Spark Thrift: NONE, LDAP, CUSTOM
     hints: Optional[Dict] = field(default=None, init=True)
     extra: Optional[Dict] = field(default=None, init=True)
 

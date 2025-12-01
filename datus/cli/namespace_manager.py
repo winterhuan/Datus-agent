@@ -128,15 +128,19 @@ class NamespaceManager:
             return 1
 
         # Database type selection
-        db_types = ["sqlite", "duckdb", "snowflake", "mysql", "starrocks"]
+        db_types = ["sqlite", "duckdb", "snowflake", "mysql", "starrocks", "spark_thrift"]
         db_type = Prompt.ask("- Database type", choices=db_types, default="duckdb")
 
         # Connection configuration based on database type
-        if db_type in ["starrocks", "mysql"]:
-            # Host-based database configuration (StarRocks/MySQL)
-            host = Prompt.ask("- Host", default="127.0.0.1")
-            default_port = "9030" if db_type == "starrocks" else "3306"
-            port = Prompt.ask("- Port", default=default_port)
+        if db_type in ["starrocks", "mysql", "spark_thrift"]:
+            # Host-based database configuration (StarRocks/MySQL/Spark Thrift)
+            if db_type == "spark_thrift":
+                host = Prompt.ask("- Host", default="localhost")
+                port = Prompt.ask("- Port", default="10000")
+            else:
+                host = Prompt.ask("- Host", default="127.0.0.1")
+                default_port = "9030" if db_type == "starrocks" else "3306"
+                port = Prompt.ask("- Port", default=default_port)
             valid, error_msg = _validate_port(port)
             if not valid:
                 console.print(f"❌ {error_msg}")
@@ -159,6 +163,11 @@ class NamespaceManager:
             # Add StarRocks-specific catalog field
             if db_type == "starrocks":
                 config_data["catalog"] = "default_catalog"
+
+            # Add Spark Thrift-specific auth field
+            if db_type == "spark_thrift":
+                auth = Prompt.ask("- Auth mechanism", choices=["NONE", "LDAP", "CUSTOM"], default="LDAP")
+                config_data["auth"] = auth
 
         elif db_type == "snowflake":
             # Snowflake specific configuration
